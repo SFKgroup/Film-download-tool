@@ -26,9 +26,14 @@ def search_videos(source,word,pg = 1):
             video = {'name':l['vod_name']}
             video['pic'] = l['vod_pic']
             _links = {}
-            for link in l['vod_play_url'].split(l['vod_play_note'])[1].split('#'):
-                _lk = link.split('$')
-                _links[_lk[0]] = _lk[1]
+            if l['vod_play_note']:
+                for link in l['vod_play_url'].split(l['vod_play_note'])[1].split('#'):
+                    _lk = link.split('$')
+                    _links[_lk[0]] = _lk[1]
+            else:
+                for link in l['vod_play_url'].split('#'):
+                    _lk = link.split('$')
+                    _links[_lk[0]] = _lk[1]
             video['links'] = _links
             videos.append(video)
     else:return None
@@ -54,7 +59,8 @@ def download(video):
     grand.close()
     time.sleep(0.1)
     print('\033[33m下载开始\033[0m ID:'+dlid)
-    os.system('start "._download_'+dlid+'.bat"')
+    print('\033[2m如果下载没有正常开始,请双击运行: "._download_'+dlid+'.bat"\033[0m')
+    os.system('start "" "._download_'+dlid+'.bat"')
 
 def tui():
     global active_source,source_name,width
@@ -105,6 +111,9 @@ def search(args=None):
 
     active_video = 0
     if ans.isdigit() and 0 <= int(ans)< len(names):active_video = video_dic['videos'][int(ans)]
+    elif ans == '':
+        print('\033[31m退出搜索\033[0m')
+        return 1
     elif ans in names:active_video = video_dic['videos'][names.index(ans)]
     elif ans == '>':
         page += 1
@@ -114,7 +123,7 @@ def search(args=None):
         page -= 1
         if page < 1:page = video_dic['page_num']
         search([word,page])
-    elif ans[0] == ':'and ans[1:].isdigit() and 1 <= int(ans[1:]) <= video_dic['page_num']:
+    elif len(ans) > 1 and ans[0] == ':'and ans[1:].isdigit() and 1 <= int(ans[1:]) <= video_dic['page_num']:
         page = int(ans[1:])
         search([word,page])
     else:
